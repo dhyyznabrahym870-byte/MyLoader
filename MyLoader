@@ -1,0 +1,273 @@
+-- // سكربت Levi Hub النهائي (الأيقونة في المنتصف من الأعلى)
+-- // تطوير: ذي يزن
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+-- إزالة الواجهة القديمة إن وجدت
+pcall(function()
+    if PlayerGui:FindFirstChild("LeviHubUI") then
+        PlayerGui.LeviHubUI:Destroy()
+    end
+end)
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "LeviHubUI"
+ScreenGui.Parent = PlayerGui
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- زر فتح وإغلاق القائمة العائم (تم نقله إلى شمال المنتصف: في الأعلى وبالنصف أفقياً)
+local ToggleButton = Instance.new("ImageButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Parent = ScreenGui
+ToggleButton.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+ToggleButton.Position = UDim2.new(0.5, -27, 0.02, 0) -- منتصف الشاشة من الأعلى
+ToggleButton.Size = UDim2.new(0, 55, 0, 55)
+ToggleButton.Image = "rbxassetid://87720308473803"
+ToggleButton.ScaleType = Enum.ScaleType.Crop
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 12)
+ToggleCorner.Parent = ToggleButton
+
+local ToggleStroke = Instance.new("UIStroke")
+ToggleStroke.Color = Color3.fromRGB(120, 120, 120)
+ToggleStroke.Thickness = 2
+ToggleStroke.Parent = ToggleButton
+
+-- النافذة الرئيسية
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+MainFrame.Position = UDim2.new(0.5, -175, 0.5, -150)
+MainFrame.Size = UDim2.new(0, 350, 0, 300)
+MainFrame.Visible = false
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.ClipsDescendants = true
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 10)
+MainCorner.Parent = MainFrame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(80, 80, 80)
+MainStroke.Thickness = 2
+MainStroke.Parent = MainFrame
+
+-- خلفية القائمة
+local BackgroundImage = Instance.new("ImageLabel")
+BackgroundImage.Name = "BackgroundImage"
+BackgroundImage.Parent = MainFrame
+BackgroundImage.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+BackgroundImage.BackgroundTransparency = 1
+BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
+BackgroundImage.Image = "rbxassetid://87720308473803"
+BackgroundImage.ScaleType = Enum.ScaleType.Slice
+
+-- طبقة تغميق خفيفة
+local Overlay = Instance.new("Frame")
+Overlay.Name = "Overlay"
+Overlay.Parent = MainFrame
+Overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Overlay.BackgroundTransparency = 0.45
+Overlay.Size = UDim2.new(1, 0, 1, 0)
+
+-- الشريط العلوي
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Parent = MainFrame
+TopBar.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+TopBar.BackgroundTransparency = 0.3
+TopBar.Size = UDim2.new(1, 0, 0, 35)
+
+local TopCorner = Instance.new("UICorner")
+TopCorner.CornerRadius = UDim.new(0, 10)
+TopCorner.Parent = TopBar
+
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Parent = TopBar
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.new(0.04, 0, 0, 0)
+Title.Size = UDim2.new(0.8, 0, 1, 0)
+Title.Font = Enum.Font.GothamBold
+Title.Text = "LEVI HUB | Top Center"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 13
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- زر إغلاق السكربت (X)
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Parent = TopBar
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+CloseButton.BackgroundTransparency = 1
+CloseButton.Position = UDim2.new(0.88, 0, 0.15, 0)
+CloseButton.Size = UDim2.new(0, 25, 0, 25)
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 80, 80)
+CloseButton.TextSize = 14
+
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- حاوية العناصر
+local Container = Instance.new("ScrollingFrame")
+Container.Name = "Container"
+Container.Parent = MainFrame
+Container.Active = true
+Container.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Container.BackgroundTransparency = 1
+Container.Position = UDim2.new(0.03, 0, 0.15, 0)
+Container.Size = UDim2.new(0.94, 0, 0.82, 0)
+Container.CanvasSize = UDim2.new(0, 0, 0, 0)
+Container.ScrollBarThickness = 3
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Parent = Container
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 8)
+
+-- متغيرات الحالة
+local isFarmingAnimals = false
+local isFarmingWorkout = false
+
+local function CreateButton(name, defaultText)
+    local btn = Instance.new("TextButton")
+    btn.Name = name
+    btn.Parent = Container
+    btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    btn.BackgroundTransparency = 0.3
+    btn.Size = UDim2.new(1, 0, 0, 45)
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = defaultText
+    btn.TextColor3 = Color3.fromRGB(255, 100, 100)
+    btn.TextSize = 13
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = btn
+    
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(100, 100, 100)
+    stroke.Thickness = 1
+    stroke.Parent = btn
+    
+    return btn
+end
+
+-- 1. زر تفريم الحيوانات
+local FarmAnimalsBtn = CreateButton("FarmAnimalsBtn", "   تفريم الحيوانات (OFF)")
+FarmAnimalsBtn.MouseButton1Click:Connect(function()
+    isFarmingAnimals = not isFarmingAnimals
+    if isFarmingAnimals then
+        isFarmingWorkout = false
+        FarmAnimalsBtn.Text = "   تفريم الحيوانات (ON)"
+        FarmAnimalsBtn.TextColor3 = Color3.fromRGB(100, 255, 100)
+    else
+        FarmAnimalsBtn.Text = "   تفريم الحيوانات (OFF)"
+        FarmAnimalsBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+    end
+end)
+
+-- 2. زر تفريم آلات التمرين
+local FarmWorkoutBtn = CreateButton("FarmWorkoutBtn", "   تفريم آلات التمرين (OFF)")
+FarmWorkoutBtn.MouseButton1Click:Connect(function()
+    isFarmingWorkout = not isFarmingWorkout
+    if isFarmingWorkout then
+        isFarmingAnimals = false
+        FarmWorkoutBtn.Text = "   تفريم آلات التمرين (ON)"
+        FarmWorkoutBtn.TextColor3 = Color3.fromRGB(100, 255, 100)
+    else
+        FarmWorkoutBtn.Text = "   تفريم آلات التمرين (OFF)"
+        FarmWorkoutBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+    end
+end)
+
+local workoutPositions = {
+    Vector3.new(-13.61, 11.71, -8.53),
+    Vector3.new(31.90, 5.50, -6.88),
+    Vector3.new(83.47, 5.50, -7.96),
+    Vector3.new(-67.59, 5.50, -6.25),
+    Vector3.new(-117.50, 5.50, -5.41)
+}
+
+-- لوب تفريم الحيوانات (مع الحماية وموقع الماوس الآمن)
+task.spawn(function()
+    while true do
+        if isFarmingAnimals and not MainFrame.Visible then
+            pcall(function()
+                local character = LocalPlayer.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(0.00, 5.60, -45.00))
+                end
+            end)
+            
+            task.wait(1.81)
+            
+            if isFarmingAnimals and not MainFrame.Visible then
+                pcall(function()
+                    local safeX = 100
+                    local safeY = 100
+                    VirtualInputManager:SendMouseButtonEvent(safeX, safeY, 0, true, game, 1)
+                    task.wait(0.05)
+                    VirtualInputManager:SendMouseButtonEvent(safeX, safeY, 0, false, game, 1)
+                end)
+            end
+        end
+        task.wait(0.1)
+    end
+end)
+
+-- لوب تفريم آلات التمرين الذكي
+task.spawn(function()
+    while true do
+        if isFarmingWorkout and not MainFrame.Visible then
+            for _, pos in ipairs(workoutPositions) do
+                if not isFarmingWorkout or MainFrame.Visible then break end
+                
+                pcall(function()
+                    local character = LocalPlayer.Character
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        local hrp = character.HumanoidRootPart
+                        hrp.CFrame = CFrame.new(pos)
+                        
+                        local timeWaiting = 0
+                        local lastPos = hrp.Position
+                        
+                        while isFarmingWorkout and not MainFrame.Visible and timeWaiting < 12 do
+                            task.wait(1)
+                            timeWaiting = timeWaiting + 1
+                            
+                            if (hrp.Position - lastPos).Magnitude < 1 then
+                                break
+                            end
+                            lastPos = hrp.Position
+                        end
+                    end
+                end)
+                task.wait(0.5)
+            end
+        end
+        task.wait(0.5)
+    end
+end)
+
+-- فتح وإغلاق القائمة الرئيسية
+local isOpen = false
+ToggleButton.MouseButton1Click:Connect(function()
+    isOpen = not isOpen
+    MainFrame.Visible = isOpen
+    TweenService:Create(ToggleButton, TweenInfo.new(0.2), {ImageTransparency = isOpen and 0.2 or 0}):Play()
+end)
+
+print("تم نقل أيقونة السكربت إلى شمال المنتصف بنجاح!")
